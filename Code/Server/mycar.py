@@ -33,6 +33,7 @@ class Car:
             self.infrared = Infrared()
         if self.adc is None:
             self.adc = ADC() 
+        self.speed = 1500
 
     def close(self):
         self.motor.set_motor_model(0,0,0,0)
@@ -63,37 +64,91 @@ class Car:
         self.motor.set_motor_model(0, 0, 0, 0)
 
    
-def control_car(stdscr):
+def control_car(car, stdscr):
     curses.cbreak()
     stdscr.keypad(True)
+    stdscr.nodelay(True)  # don't block on getch()
     stdscr.clear()
     stdscr.addstr("Press arrow keys (Ctrl+C to quit):\n")
+    stdscr.refresh()
 
-    while True:
-        key = stdscr.getch()
-        if key == curses.KEY_UP:
-            stdscr.addstr("Up arrow pressed\n")
-            car.forward()
-        elif key == curses.KEY_DOWN:
-            stdscr.addstr("Down arrow pressed\n")
-            car.backward()
-        elif key == curses.KEY_LEFT:
-            stdscr.addstr("Left arrow pressed\n")
-            car.turn_left() 
-        elif key == curses.KEY_RIGHT:
-            stdscr.addstr("Right arrow pressed\n")
-            car.turn_right()
-        elif key == ord('q'):
-            stdscr.addstr("Quitting...\n")
-            car.stop()
-            break
-        elif key == ord('s'):
-            stdscr.addstr("Stopping...\n")
-            car.stop()
-        else:
-            stdscr.addstr("Invalid key pressed\n")
-            car.stop()
-        stdscr.refresh()
+
+    try:
+        while True:
+            key = stdscr.getch()
+
+            if car.sonic is not None:
+                # Get distance from ultrasonic sensor
+                distance = car.sonic.get_distance()
+                if distance is not None:
+                    if distance < 45:
+                        #stdscr.addstr("Obstacle detected! Stopping car.\n")
+                        car.stop()
+                        car.backward(800)  # Back up for 1 second
+                        time.sleep(0.5)
+                        car.stop()
+                        stdscr.addstr("Obstacle detected! Backing up.\n")
+                        continue
+
+            if key == -1:
+                # No key pressed right now
+                time.sleep(0.05)
+                continue
+
+            if key == curses.KEY_UP:
+               
+                stdscr.addstr("Up pressed\n")
+                car.forward()
+            elif key == curses.KEY_DOWN:
+                stdscr.addstr("Down pressed\n")
+                car.backward()
+            elif key == curses.KEY_LEFT:
+            
+                stdscr.addstr("Left pressed\n")
+                car.turn_left()
+            elif key == curses.KEY_RIGHT:
+                stdscr.addstr("Right pressed\n")
+                car.turn_right()
+            elif key == ord('s'):
+                stdscr.addstr("Stop pressed\n")
+                car.stop()
+            elif key == ord('1'):
+                car.speed = 400
+                car.forward(car.speed)
+                stdscr.addstr("Speed set to 400\n")
+            elif key == ord('2'):
+                car.speed = 600
+                car.forward(car.speed)
+                stdscr.addstr("Speed set to 600\n")
+            elif key == ord('3'):
+                car.speed = 800
+                car.forward(car.speed)
+                stdscr.addstr("Speed set to 800\n")
+            elif key == ord('4'):
+                car.speed = 1000
+                car.forward(car.speed)
+                stdscr.addstr("Speed set to 1000\n")
+            elif key == ord('5'):
+                car.speed = 1200
+                car.forward(car.speed)
+                stdscr.addstr("Speed set to 1200\n")
+            elif key == ord('6'):
+                car.speed = 1500
+                car.forward(car.speed)
+                stdscr.addstr("Speed set to 1500\n")
+            elif key == ord('7'):
+                car.speed = 1800
+                car.forward(car.speed)
+                stdscr.addstr("Speed set to 1800\n")
+
+            else:
+                stdscr.addstr("Unknown key pressed\n")
+                car.stop()
+            stdscr.refresh()
+            time.sleep(0.05)
+
+    except KeyboardInterrupt:
+        pass
 
 def test_car_light():
     car = Car()
@@ -117,11 +172,19 @@ def test_car_rotate():
 
 if __name__ == '__main__':
     car = Car()
+    initscr = curses.initscr()
+    curses.curs_set(0)  # Hide the cursor
+    initscr.clear()
+    initscr.refresh()
     try:
         # Uncomment the function you want to test
-        control_car(curses.initscr())  # Control car with arrow keys
+        control_car(car, initscr)  # Control car with arrow keys
         # test_car_light()  # Test car light mode
         # test_car_rotate()  # Test car rotation mode
     except KeyboardInterrupt:
         print("\nEnd of program")
+    finally:
+        initscr.clear()
+        initscr.refresh()
+        curses.endwin()
         car.close()
