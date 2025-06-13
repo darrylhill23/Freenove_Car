@@ -96,11 +96,23 @@ if __name__ == '__main__':
 
     print("View image...")
     camera.start_image()                                 # Start the camera preview
-    time.sleep(10)                                       # Wait for 10 seconds
+    # time.sleep(10)                                       # Wait for 10 seconds
     
     print("Capture image...")
     camera.save_image(filename="image.jpg")              # Capture and save an image
     time.sleep(1)                                        # Wait for 1 second
+
+    try:
+        print("Press Ctrl+C to stop the program...")     # Print a message indicating how to stop the program
+        while True:
+            frame = camera.get_frame()                   # Get the current frame from the streaming output
+            # Here you can process the frame if needed
+            # For example, you can display it using OpenCV or save it to a file
+            cv2.imshow("Frame", frame)                # Uncomment this line if you want to display the frame using OpenCV
+            cv2.waitKey(1)                            # Uncomment this line if you want to wait for a key press
+    except KeyboardInterrupt:
+        print("\nEnd of program")                        # Print a message indicating the end of the program
+        camera.close()                                   # Close the camera
 
     '''
     print("Stream video...")
