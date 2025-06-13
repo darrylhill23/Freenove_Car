@@ -104,6 +104,14 @@ class Car:
                 self.motor.set_motor_model(4000,4000,-2000,-2000)
             elif infrared_value == 7:
                 self.motor.set_motor_model(0,0,0,0)
+            
+    def mode_infrared_output(self):
+        infrared_value = self.infrared.read_all_infrared()
+
+        ir1_value = infrared.read_one_infrared(1)
+        ir2_value = infrared.read_one_infrared(2)
+        ir3_value = infrared.read_one_infrared(3)
+        print("Infrared 1: {}, Infrared 2: {}, Infrared 3: {}, All: {}".format(ir1_value, ir2_value, ir3_value, infrared_value))
 
     def mode_light(self):
         if (time.time() - self.car_record_time) > 0.2:
@@ -189,3 +197,11 @@ if __name__ == '__main__':
         test_car_light()
     elif sys.argv[1] == 'Rotate' or sys.argv[1] == 'rotate':
         test_car_rotate()
+    elif sys.argv[1] == 'infrared-output':
+        car = Car()
+        try:
+            while True:
+                car.mode_infrared_output()
+        except KeyboardInterrupt:
+            car.close()
+            print("\nEnd of program")
