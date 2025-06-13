@@ -106,7 +106,9 @@ if __name__ == '__main__':
 
     try:
         print("Press Ctrl+C to stop the program...")     # Print a message indicating how to stop the program
+        count = 0
         while True:
+            count = count + 1
             frame = camera.get_frame()                   # Get the current frame from the streaming output
             #frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
             image = cv2.imdecode(np.frombuffer(frame, dtype=np.uint8), cv2.IMREAD_COLOR)
@@ -114,8 +116,9 @@ if __name__ == '__main__':
             # For example, you can display it using OpenCV or save it to a file
             cv2.imshow("Frame", image)                # Uncomment this line if you want to display the frame using OpenCV
             print("next frame")
-            time.sleep(2)
+            #time.sleep(2)
             cv2.waitKey(0)                            # Uncomment this line if you want to wait for a key press
+            cv2.imwrite(f"image-{count}.jpg",image)
     except KeyboardInterrupt:
         print("\nEnd of program")                        # Print a message indicating the end of the program
         camera.close()                                   # Close the camera
