@@ -105,7 +105,7 @@ class Car:
             elif infrared_value == 7:
                 self.motor.set_motor_model(0,0,0,0)
             elif infrared_value == 0:
-                self.motor.set_motor_model(0,0,0,0)
+                self.motor.set_motor_model(400,400,400,400)
             elif infrared_value == 5:
                 self.motor.set_motor_model(600,600,600,600)
             
