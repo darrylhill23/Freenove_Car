@@ -5,6 +5,7 @@ from picamera2.outputs import FileOutput
 from libcamera import Transform
 from threading import Condition
 import io
+import cv2  # Import OpenCV for image processing (optional, can be used for displaying frames)
 
 class StreamingOutput(io.BufferedIOBase):
     def __init__(self):
@@ -95,17 +96,18 @@ if __name__ == '__main__':
     camera = Camera()                                    # Create a Camera instance
 
     print("View image...")
-    camera.start_image()                                 # Start the camera preview
+    camera.start_stream()                                 # Start the camera preview
     # time.sleep(10)                                       # Wait for 10 seconds
     
-    print("Capture image...")
-    camera.save_image(filename="image.jpg")              # Capture and save an image
-    time.sleep(1)                                        # Wait for 1 second
+    # print("Capture image...")
+    # camera.save_image(filename="image.jpg")              # Capture and save an image
+    # time.sleep(1)                                        # Wait for 1 second
 
     try:
         print("Press Ctrl+C to stop the program...")     # Print a message indicating how to stop the program
         while True:
             frame = camera.get_frame()                   # Get the current frame from the streaming output
+            image = cv2.imdecode(np.frombuffer(frame, dtype=np.uint8), cv2.IMREAD_COLOR)
             # Here you can process the frame if needed
             # For example, you can display it using OpenCV or save it to a file
             cv2.imshow("Frame", frame)                # Uncomment this line if you want to display the frame using OpenCV
