@@ -1,0 +1,17 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+    echo "Usage: $0 <file-to-copy>"
+    exit 1
+fi
+
+# File to copy
+FILE="$1"
+
+# Destination info (edit this)
+USER="darryl"
+HOST="172.17.13.7"
+DEST_DIR="~/Freenove_Car/Code/Server/"
+
+# Run scp
+scp "$FILE" "$USER@$HOST:$DEST_DIR"
