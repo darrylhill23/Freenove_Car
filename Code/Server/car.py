@@ -93,25 +93,30 @@ class Car:
             infrared_value = self.infrared.read_all_infrared()
             #print("infrared_value: " + str(infrared_value))
             if infrared_value == 2:
-                self.motor.set_motor_model(800,800,800,800)
+                self.motor.set_motor_model(600,600,600,600)
             elif infrared_value == 4:
-                self.motor.set_motor_model(-1500,-1500,2500,2500)
+                self.motor.set_motor_model(-500,-500,1500,1500)
             elif infrared_value == 6:
-                self.motor.set_motor_model(-2000,-2000,4000,4000)
+                self.motor.set_motor_model(-600,-600,1200,1200)
             elif infrared_value == 1:
-                self.motor.set_motor_model(2500,2500,-1500,-1500)
+                self.motor.set_motor_model(1500,1500,-500,-500)
             elif infrared_value == 3:
-                self.motor.set_motor_model(4000,4000,-2000,-2000)
+                self.motor.set_motor_model(1200,1200,-600,-600)
             elif infrared_value == 7:
                 self.motor.set_motor_model(0,0,0,0)
+            elif infrared_value == 0:
+                self.motor.set_motor_model(0,0,0,0)
+            elif infrared_value == 5:
+                self.motor.set_motor_model(600,600,600,600)
             
     def mode_infrared_output(self):
         infrared_value = self.infrared.read_all_infrared()
 
-        ir1_value = infrared.read_one_infrared(1)
-        ir2_value = infrared.read_one_infrared(2)
-        ir3_value = infrared.read_one_infrared(3)
+        ir1_value = self.infrared.read_one_infrared(1)
+        ir2_value = self.infrared.read_one_infrared(2)
+        ir3_value = self.infrared.read_one_infrared(3)
         print("Infrared 1: {}, Infrared 2: {}, Infrared 3: {}, All: {}".format(ir1_value, ir2_value, ir3_value, infrared_value))
+        time.sleep(0.1)
 
     def mode_light(self):
         if (time.time() - self.car_record_time) > 0.2:
