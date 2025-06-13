@@ -6,6 +6,7 @@ from libcamera import Transform
 from threading import Condition
 import io
 import cv2  # Import OpenCV for image processing (optional, can be used for displaying frames)
+import numpy as np
 
 class StreamingOutput(io.BufferedIOBase):
     def __init__(self):
@@ -107,10 +108,11 @@ if __name__ == '__main__':
         print("Press Ctrl+C to stop the program...")     # Print a message indicating how to stop the program
         while True:
             frame = camera.get_frame()                   # Get the current frame from the streaming output
+            #frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
             image = cv2.imdecode(np.frombuffer(frame, dtype=np.uint8), cv2.IMREAD_COLOR)
             # Here you can process the frame if needed
             # For example, you can display it using OpenCV or save it to a file
-            cv2.imshow("Frame", frame)                # Uncomment this line if you want to display the frame using OpenCV
+            cv2.imshow("Frame", image)                # Uncomment this line if you want to display the frame using OpenCV
             cv2.waitKey(1)                            # Uncomment this line if you want to wait for a key press
     except KeyboardInterrupt:
         print("\nEnd of program")                        # Print a message indicating the end of the program
