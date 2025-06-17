@@ -177,14 +177,19 @@ def test_car_rotate():
         car.motor.set_motor_model(0,0,0,0)
         car.close()
 
-def get_direction(image):
+def get_direction(camera):
     """Determine the direction based on the image.
     Args:
         image: The image captured from the camera.
     Returns:
         An angle between 45 and 135 degrees"""
-    # Placeholder for actual image processing logic
-    # For now, return a random direction
+    frame = car.camera.get_frame()  # Get the current frame from the camera
+    img = cv2.imdecode(np.frombuffer(frame, dtype=np.uint8), cv2.IMREAD_COLOR)
+    img = utils.prep_image(img, 1, 1, trimFromTop = 0.3)
+    cv2.imshow("Frame", img)  # Display the frame using OpenCV
+    cv2.waitKey(1)  # Wait for a short time to allow OpenCV to update the display
+
+    return 90 # corresponds to straight ahead, placeholder angle
 
 def test_cam_nav():
     """Test camera navigation."""
@@ -195,15 +200,34 @@ def test_cam_nav():
     # initscr.refresh()
     try:
         print("Press Ctrl+C to stop the program...")
-        count = 0
+
+        left_speed = 1500
+        right_speed = 1500
+        turn_factor = 5  # Adjust this factor to control the turning sensitivity
+       
         while True:
-            count += 1
-            frame = car.camera.get_frame()  # Get the current frame from the camera
-            img = cv2.imdecode(np.frombuffer(frame, dtype=np.uint8), cv2.IMREAD_COLOR)
-            img = utils.prep_image(img, 1, 1, trimFromTop = 0.3)
-            cv2.imshow("Frame", image)  # Display the frame using OpenCV
-            cv2.waitKey(1)  # Wait for a short time to allow OpenCV to update the display
-            cv2.imwrite(f"image-{count}.jpg", image)  # Save the captured image
+            left_speed = 1500
+            right_speed = 1500
+            angle = get_direction(car.camera)  # Get the direction from the camera
+
+            # Big angle, make a sharper turn, smaller angle, make a slight turn
+            # Can't test it but we will put some temp code here
+
+            if angle > 135 or angle < 45:
+                print("Bad angle")
+            
+            if angle < 90:
+                # Turn left
+                print("Turning left with angle:", angle)
+                delta = (90 - angle) * turn_factor
+                left_speed -= delta
+
+            elif angle > 90:
+                # Turn right
+                print("Turning right with angle:", angle)
+                delta = (angle - 90) * turn_factor
+                right_speed -= delta
+
     except KeyboardInterrupt:
         print("\nEnd of program")
         car.camera.close()  # Close the camera
