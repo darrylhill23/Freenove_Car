@@ -2,7 +2,10 @@ from ultrasonic import Ultrasonic
 from motor import Ordinary_Car
 from servo import Servo
 from infrared import Infrared
+from camera import Camera
 from adc import ADC
+import cv2
+import numpy as np
 import time
 import math
 
@@ -15,6 +18,7 @@ class Car:
         self.motor = None
         self.infrared = None
         self.adc = None
+        self.camera = None
         self.car_record_time = time.time()
         self.car_sonic_servo_angle = 30
         self.car_sonic_servo_dir = 1
@@ -33,6 +37,8 @@ class Car:
             self.infrared = Infrared()
         if self.adc is None:
             self.adc = ADC() 
+        if self.camera is None:
+            self.camera = Camera()
         self.speed = 1500
 
     def close(self):
@@ -169,6 +175,27 @@ def test_car_rotate():
         print ("\nEnd of program")
         car.motor.set_motor_model(0,0,0,0)
         car.close()
+
+def test_cam_nav():
+    """Test camera navigation."""
+    car = Car()
+    initscr = curses.initscr()
+    curses.curs_set(0)  # Hide the cursor
+    initscr.clear()
+    initscr.refresh()
+    try:
+        print("Press Ctrl+C to stop the program...")
+        count = 0
+        while True:
+            count += 1
+            frame = car.camera.get_frame()  # Get the current frame from the camera
+            image = cv2.imdecode(np.frombuffer(frame, dtype=np.uint8), cv2.IMREAD_COLOR)
+            cv2.imshow("Frame", image)  # Display the frame using OpenCV
+            cv2.waitKey(1)  # Wait for a short time to allow OpenCV to update the display
+            cv2.imwrite(f"image-{count}.jpg", image)  # Save the captured image
+    except KeyboardInterrupt:
+        print("\nEnd of program")
+        car.camera.close()  # Close the camera
 
 if __name__ == '__main__':
     car = Car()
