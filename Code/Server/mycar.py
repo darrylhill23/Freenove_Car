@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 import time
 import math
+import utils2 as utils
 
 import curses
 
@@ -176,20 +177,30 @@ def test_car_rotate():
         car.motor.set_motor_model(0,0,0,0)
         car.close()
 
+def get_direction(image):
+    """Determine the direction based on the image.
+    Args:
+        image: The image captured from the camera.
+    Returns:
+        An angle between 45 and 135 degrees"""
+    # Placeholder for actual image processing logic
+    # For now, return a random direction
+
 def test_cam_nav():
     """Test camera navigation."""
     car = Car()
-    initscr = curses.initscr()
-    curses.curs_set(0)  # Hide the cursor
-    initscr.clear()
-    initscr.refresh()
+    # initscr = curses.initscr()
+    # curses.curs_set(0)  # Hide the cursor
+    # initscr.clear()
+    # initscr.refresh()
     try:
         print("Press Ctrl+C to stop the program...")
         count = 0
         while True:
             count += 1
             frame = car.camera.get_frame()  # Get the current frame from the camera
-            image = cv2.imdecode(np.frombuffer(frame, dtype=np.uint8), cv2.IMREAD_COLOR)
+            img = cv2.imdecode(np.frombuffer(frame, dtype=np.uint8), cv2.IMREAD_COLOR)
+            img = utils.prep_image(img, 1, 1, trimFromTop = 0.3)
             cv2.imshow("Frame", image)  # Display the frame using OpenCV
             cv2.waitKey(1)  # Wait for a short time to allow OpenCV to update the display
             cv2.imwrite(f"image-{count}.jpg", image)  # Save the captured image
@@ -198,20 +209,23 @@ def test_cam_nav():
         car.camera.close()  # Close the camera
 
 if __name__ == '__main__':
-    car = Car()
-    initscr = curses.initscr()
-    curses.curs_set(0)  # Hide the cursor
-    initscr.clear()
-    initscr.refresh()
-    try:
-        # Uncomment the function you want to test
-        control_car(car, initscr)  # Control car with arrow keys
-        # test_car_light()  # Test car light mode
-        # test_car_rotate()  # Test car rotation mode
-    except KeyboardInterrupt:
-        print("\nEnd of program")
-    finally:
-        initscr.clear()
-        initscr.refresh()
-        curses.endwin()
-        car.close()
+
+    print('Program is starting ... ')  # Print a message indicating the start of the program
+    test_cam_nav()  # Test camera navigation
+    # car = Car()
+    # initscr = curses.initscr()
+    # curses.curs_set(0)  # Hide the cursor
+    # initscr.clear()
+    # initscr.refresh()
+    # try:
+    #     # Uncomment the function you want to test
+    #     control_car(car, initscr)  # Control car with arrow keys
+    #     # test_car_light()  # Test car light mode
+    #     # test_car_rotate()  # Test car rotation mode
+    # except KeyboardInterrupt:
+    #     print("\nEnd of program")
+    # finally:
+    #     initscr.clear()
+    #     initscr.refresh()
+    #     curses.endwin()
+    #     car.close()
