@@ -9,6 +9,7 @@ import numpy as np
 import time
 import math
 import utils2 as utils
+import cam_utils
 
 import curses
 
@@ -186,8 +187,50 @@ def get_direction(camera):
     frame = car.camera.get_frame()  # Get the current frame from the camera
     img = cv2.imdecode(np.frombuffer(frame, dtype=np.uint8), cv2.IMREAD_COLOR)
     img = utils.prep_image(img, 1, 1, trimFromTop = 0.3)
-    cv2.imshow("Frame", img)  # Display the frame using OpenCV
-    cv2.waitKey(1)  # Wait for a short time to allow OpenCV to update the display
+
+    #warped = cam_utils.birdseye(img)
+    # cv2.imshow("Frame", img)  # Display the frame using OpenCV
+    # cv2.waitKey(1)  # Wait for a short time to allow OpenCV to update the display
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+
+    # # Apply Gaussian blur - doens't work well
+    # #blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    blurred = gray.copy()
+    
+
+    # # Apply Canny edge detection
+    edges = cv2.Canny(blurred, 50, 150)
+    
+
+    # # Dilate and erode the image
+    # dilated = cv2.dilate(edges, None, iterations=1)
+    # eroded = cv2.erode(dilated, None)
+
+    contours = cam_utils.find_contours(edges)
+
+    print("Number of contours: ", len(contours))
+    contours = utils.reduce_contours(contours)
+    print("Number of contours after reduction: ", len(contours))
+    contours = cam_utils.warped_contours(contours)
+
+    for contour in contours:
+            
+        #cv2.drawContours(result_image, [contour], -1, (0, 255, 0), 3)
+        segment_points = cam_utils.get_segments(contour)
+        
+        for i, segment in enumerate(segment_points):
+            #cv2.drawContours(result_image, [[segment]], -1, (0, 255, 0), 3)
+            #cv2.line(result_image, segment[0], segment[1], (0, 255, 0), 2)
+            angle = get_angle_segment(segment[0], segment[1])   
+            angle = convert_angle(angle)
+
+            length = get_length_segment(segment[0], segment[1])
+            print(f"Segment {i}: Start: {segment[0]}, End: {segment[1]}, Angle: {angle:.2f} degrees, Length: {length:.2f} pixels")
+            # cv2.imshow('Contours', result_image)
+            # cv2.waitKey(0)
+        
+
 
     return 90 # corresponds to straight ahead, placeholder angle
 
@@ -200,7 +243,7 @@ def test_cam_nav():
     # initscr.refresh()
     try:
         print("Press Ctrl+C to stop the program...")
-
+        car.camera.start()  # Start the camera
         left_speed = 1500
         right_speed = 1500
         turn_factor = 5  # Adjust this factor to control the turning sensitivity
@@ -208,6 +251,8 @@ def test_cam_nav():
         while True:
             left_speed = 1500
             right_speed = 1500
+
+            # careful as this may take a long time
             angle = get_direction(car.camera)  # Get the direction from the camera
 
             # Big angle, make a sharper turn, smaller angle, make a slight turn
@@ -227,6 +272,8 @@ def test_cam_nav():
                 print("Turning right with angle:", angle)
                 delta = (angle - 90) * turn_factor
                 right_speed -= delta
+            
+            car.motor.set_motor_model(left_speed, left_speed, right_speed, right_speed)
 
     except KeyboardInterrupt:
         print("\nEnd of program")
