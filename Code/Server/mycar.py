@@ -184,7 +184,7 @@ def get_direction(camera):
         image: The image captured from the camera.
     Returns:
         An angle between 45 and 135 degrees"""
-    frame = car.camera.get_frame()  # Get the current frame from the camera
+    frame = camera.get_frame()  # Get the current frame from the camera
     img = cv2.imdecode(np.frombuffer(frame, dtype=np.uint8), cv2.IMREAD_COLOR)
     img = utils.prep_image(img, 1, 1, trimFromTop = 0.3)
 
@@ -225,13 +225,16 @@ def get_direction(camera):
         for i, segment in enumerate(segment_points):
             #cv2.drawContours(result_image, [[segment]], -1, (0, 255, 0), 3)
             #cv2.line(result_image, segment[0], segment[1], (0, 255, 0), 2)
-            angle = get_angle_segment(segment[0], segment[1])   
-            angle = convert_angle(angle)
-            average_angle += angle
+            angle = cam_utils.get_angle_segment(segment[0], segment[1])   
+            angle = cam_utils.convert_angle(angle)
+            if angle > 135 or angle < 45:
+                print("*********Bad angle for segment******* ", angle)
+            
 
-            length = get_length_segment(segment[0], segment[1])
+            length = cam_utils.get_length_segment(segment[0], segment[1])
             total_length += length
-            print(f"Segment {i}: Start: {segment[0]}, End: {segment[1]}, Angle: {angle:.2f} degrees, Length: {length:.2f} pixels")
+            average_angle += angle*length
+            #print(f"Segment {i}: Start: {segment[0]}, End: {segment[1]}, Angle: {angle:.2f} degrees, Length: {length:.2f} pixels")
             # cv2.imshow('Contours', result_image)
             # cv2.waitKey(0)
         
@@ -251,14 +254,18 @@ def test_cam_nav():
     # initscr.refresh()
     try:
         print("Press Ctrl+C to stop the program...")
-        car.camera.start()  # Start the camera
-        left_speed = 1500
-        right_speed = 1500
+        car.camera.start_stream()  # Start the camera
+        speed = 1000
+        left_speed = speed
+        right_speed = speed
+        
         turn_factor = 5  # Adjust this factor to control the turning sensitivity
        
         while True:
-            left_speed = 1500
-            right_speed = 1500
+            car.servo.set_servo_pwm('0', 95)
+            car.servo.set_servo_pwm('1', 60)
+            left_speed = speed
+            right_speed = speed
 
             # careful as this may take a long time
             angle = get_direction(car.camera)  # Get the direction from the camera
@@ -267,7 +274,7 @@ def test_cam_nav():
             # Can't test it but we will put some temp code here
 
             if angle > 135 or angle < 45:
-                print("Bad angle")
+                print("Bad angle ", angle)
             
             if angle < 90:
                 # Turn left
@@ -280,13 +287,22 @@ def test_cam_nav():
                 print("Turning right with angle:", angle)
                 delta = (angle - 90) * turn_factor
                 right_speed -= delta
+            right_speed = int(right_speed)
+            left_speed = int(left_speed)
+            print("Setting left speed ",left_speed)
+            print("SEtting right speed", right_speed)
+            car.motor.set_motor_model(left_speed, left_speed, right_speed, right_speed)
+            #car.motor.set_motor_model(0,0,0,0)  # Stop the caro
+            print("sleeping...")
             
-            # car.motor.set_motor_model(left_speed, left_speed, right_speed, right_speed)
-            car.motor.set_motor_model(0,0,0,0)  # Stop the car
+            time.sleep(0.5)
 
     except KeyboardInterrupt:
         print("\nEnd of program")
+        car.motor.set_motor_model(0,0,0,0)
+        car.camera.stop_stream()
         car.camera.close()  # Close the camera
+
 
 if __name__ == '__main__':
 

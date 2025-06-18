@@ -6,7 +6,7 @@ import utils2 as utils
 import functools
 import sys
 import os
-import rectSort
+
 
 import time
 
@@ -209,7 +209,7 @@ def warped_contours(contours):
     warped_contours = [cv2.perspectiveTransform(cnt, M) for cnt in contours_float]
     for i in range(len(warped_contours)):
         warped_contours[i] = np.round(warped_contours[i]).astype(int)
-    print("Warped contours: ", warped_contours)
+    #print("Warped contours: ", warped_contours)
     return warped_contours
 
 def main():
