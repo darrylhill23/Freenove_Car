@@ -276,7 +276,7 @@ def test_cam_nav():
             if angle > 135 or angle < 45:
                 print("Bad angle ", angle)
             
-            if angle < 90:
+            elif angle < 90:
                 # Turn left
                 print("Turning left with angle:", angle)
                 delta = (90 - angle) * turn_factor
