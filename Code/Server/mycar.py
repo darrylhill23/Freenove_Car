@@ -214,6 +214,9 @@ def get_direction(camera):
     print("Number of contours after reduction: ", len(contours))
     contours = cam_utils.warped_contours(contours)
 
+    average_angle = 0
+    total_length = 0
+
     for contour in contours:
             
         #cv2.drawContours(result_image, [contour], -1, (0, 255, 0), 3)
@@ -224,15 +227,20 @@ def get_direction(camera):
             #cv2.line(result_image, segment[0], segment[1], (0, 255, 0), 2)
             angle = get_angle_segment(segment[0], segment[1])   
             angle = convert_angle(angle)
+            average_angle += angle
 
             length = get_length_segment(segment[0], segment[1])
+            total_length += length
             print(f"Segment {i}: Start: {segment[0]}, End: {segment[1]}, Angle: {angle:.2f} degrees, Length: {length:.2f} pixels")
             # cv2.imshow('Contours', result_image)
             # cv2.waitKey(0)
         
+    if total_length > 0:
+        average_angle /= total_length
 
+    print(f"Average angle: {average_angle:.2f} degrees")
 
-    return 90 # corresponds to straight ahead, placeholder angle
+    return average_angle 
 
 def test_cam_nav():
     """Test camera navigation."""
@@ -273,7 +281,8 @@ def test_cam_nav():
                 delta = (angle - 90) * turn_factor
                 right_speed -= delta
             
-            car.motor.set_motor_model(left_speed, left_speed, right_speed, right_speed)
+            # car.motor.set_motor_model(left_speed, left_speed, right_speed, right_speed)
+            car.motor.set_motor_model(0,0,0,0)  # Stop the car
 
     except KeyboardInterrupt:
         print("\nEnd of program")
