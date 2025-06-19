@@ -178,6 +178,7 @@ def test_car_rotate():
         car.motor.set_motor_model(0,0,0,0)
         car.close()
 
+count = 0
 def get_direction(camera):
     """Determine the direction based on the image.
     Args:
@@ -187,6 +188,17 @@ def get_direction(camera):
     frame = camera.get_frame()  # Get the current frame from the camera
     img = cv2.imdecode(np.frombuffer(frame, dtype=np.uint8), cv2.IMREAD_COLOR)
     img = utils.prep_image(img, 1, 1, trimFromTop = 0.3)
+
+    global count
+    count += 1
+    if count % 10 == 0:
+        print("Processing frame number: ", count)
+    if img is None:
+        print("Failed to decode image from camera stream.")
+        return 90
+
+
+    cv2.imwrite(f"frame-{count}.jpg", img)  # Save the image to a file for debugging
 
     #warped = cam_utils.birdseye(img)
     # cv2.imshow("Frame", img)  # Display the frame using OpenCV
@@ -243,6 +255,12 @@ def get_direction(camera):
 
     print(f"Average angle: {average_angle:.2f} degrees")
 
+    #write the average angle to a file for debugging
+    with open(f"average_angle-{count}.txt", "w") as f:
+        f.write(f"Average angle for frame {count}: {average_angle:.2f} degrees\n")
+        f.write(f"Total length: {total_length:.2f} pixels\n")
+        f.write(f"Number of contours: {len(contours)}\n")
+
     return average_angle 
 
 def test_cam_nav():
@@ -257,21 +275,20 @@ def test_cam_nav():
         car.camera.start_stream()  # Start the camera
         speed = 1000
         left_speed = speed
-        right_speed = speed
+        right_speed = speed - 100
         
-        turn_factor = 5  # Adjust this factor to control the turning sensitivity
+        turn_factor = 50  # Adjust this factor to control the turning sensitivity
        
         while True:
             car.servo.set_servo_pwm('0', 95)
             car.servo.set_servo_pwm('1', 60)
             left_speed = speed
-            right_speed = speed
+            right_speed = speed - 100
 
             # careful as this may take a long time
             angle = get_direction(car.camera)  # Get the direction from the camera
 
-            # Big angle, make a sharper turn, smaller angle, make a slight turn
-            # Can't test it but we will put some temp code here
+            # readjust to 90 by turning left or right
 
             if angle > 135 or angle < 45:
                 print("Bad angle ", angle)
