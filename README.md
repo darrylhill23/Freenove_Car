@@ -14,6 +14,14 @@ mycar.py has the work I've been doing on navigation - mostly image processing us
 
 Almost all the other python files came with the robot (well, from the forked github). 
 
+## More Darryl Hill Changes
+
+Added the folder images - these have images from the moving car (with the top third chopped off because that included things like doors, walls, etc) along with some processing on angles.
+
+images2 - these are taken from a car sitting still, but do not have the top third removed. 
+
+You may wish to try processing these using the cv2 library in Python. 
+
 
 ## Freenove 4WD Smart Car Kit for Raspberry Pi
 
