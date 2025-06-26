@@ -1,3 +1,18 @@
+## Darryl Hill Changes
+
+Have added some files to Code/Server, namely
+
+cam_utils.py
+utils2.py
+mycar.py
+
+Plus some other stuff that can be ignored. 
+
+mycar.py has the work I've been doing on navigation - mostly image processing using cv2 in Python.
+
+Almost all the other python files came with the robot (well, from the forked github). 
+
+
 ## Freenove 4WD Smart Car Kit for Raspberry Pi
 
 
