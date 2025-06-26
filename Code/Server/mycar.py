@@ -11,7 +11,14 @@ import math
 import utils2 as utils
 import cam_utils
 
+from pyzbar.pyzbar import decode
+
+
 import curses
+
+servo0Center = 95
+servo1Down = 60
+servo1Straight = 90
 
 class Car:
     def __init__(self):
@@ -158,25 +165,7 @@ def control_car(car, stdscr):
     except KeyboardInterrupt:
         pass
 
-def test_car_light():
-    car = Car()
-    try:
-        print("Program is starting...")
-        while True:
-            car.mode_light()
-    except KeyboardInterrupt:
-        car.close()
-        print("\nEnd of program")
 
-def test_car_rotate():
-    car = Car()
-    print("Program is starting...")
-    try:
-        car.mode_rotate(0)
-    except KeyboardInterrupt:
-        print ("\nEnd of program")
-        car.motor.set_motor_model(0,0,0,0)
-        car.close()
 
 count = 0
 def get_direction(camera):
@@ -207,12 +196,12 @@ def get_direction(camera):
 
 
     # # Apply Gaussian blur - doens't work well
-    # #blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-    blurred = gray.copy()
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    #blurred = gray.copy()
     
 
     # # Apply Canny edge detection
-    edges = cv2.Canny(blurred, 50, 150)
+    edges = cv2.Canny(blurred, 20, 60)
     
 
     # # Dilate and erode the image
@@ -263,25 +252,150 @@ def get_direction(camera):
 
     return average_angle 
 
+
+
+qrcount = 0
+def get_qr_code(car):
+    """Get QR code from the camera stream."""
+    '''Bring the camera up - assume the stream is started'''
+
+    global qrcount
+
+    for i in range(servo1Down, servo1Straight+1, 1):
+        car.servo.set_servo_pwm('1', i)
+        time.sleep(0.1)
+
+    time.sleep(0.2)
+    frame = car.camera.get_frame()  # Get the current frame from the camera
+    img = cv2.imdecode(np.frombuffer(frame, dtype=np.uint8), cv2.IMREAD_COLOR)
+    if img is None:
+        print("Failed to decode image from camera stream.")
+        return None
+
+    cv2.imwrite(f"qrcode-{qrcount}.jpg", img)  
+
+    qrcount = qrcount + 1
+
+    decoded_objects = decode(img)
+    
+
+    for i in range(servo1Straight, servo1Down-1, -1):
+        car.servo.set_servo_pwm('1', i)
+        time.sleep(0.1)
+
+    for obj in decoded_objects:
+        print("QR Code detected:", obj.data.decode('utf-8'))
+        return obj.data.decode('utf-8')
+
+    print("No QR Code detected.")
+    return None
+
+piccount = 0
+def take_pic(car):
+    """Get QR code from the camera stream."""
+    '''Bring the camera up - assume the stream is started'''
+
+    global piccount
+
+    for i in range(servo1Down, servo1Straight+1, 1):
+        car.servo.set_servo_pwm('1', i)
+        time.sleep(0.1)
+
+    time.sleep(0.8)
+    frame = car.camera.get_frame()  # Get the current frame from the camera
+    img = cv2.imdecode(np.frombuffer(frame, dtype=np.uint8), cv2.IMREAD_COLOR)
+    if img is None:
+        print("Failed to decode image from camera stream.")
+        return None
+
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    # # Apply Gaussian blur - doens't work well
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    #blurred = gray.copy()
+    
+    # # Apply Canny edge detection
+    edges = cv2.Canny(blurred, 20, 60)
+    
+
+    ''' 
+        Dilate and erode the image - when the camera is shaky, which
+        is anytime the robot is moving, these two things make 
+        contour detection more difficult.
+    '''
+    # dilated = cv2.dilate(edges, None, iterations=1)
+    # eroded = cv2.erode(dilated, None)
+
+    contours = cam_utils.find_contours(edges)
+
+    print("Number of contours: ", len(contours))
+
+    # this attempts to make every contour at most 4 segments. 
+    # This will make things better when there is little noise,
+    # or sometimes worse if there is a lot of noise 
+    contours = utils.reduce_contours(contours)
+    print("Number of contours after reduction: ", len(contours))
+
+    #draw contours on the image
+    cv2.drawContours(img, contours, -1, (0, 255, 0), 3)
+    
+    #save the images
+    cv2.imwrite(f"pics-{piccount}.jpg", img)  
+    cv2.imwrite(f"edges-{piccount}.jpg", edges)
+
+    piccount = piccount + 1
+    
+    # replace the servos to a downward direction
+    for i in range(servo1Straight, servo1Down-1, -1):
+        car.servo.set_servo_pwm('1', i)
+        time.sleep(0.1)
+
+    print("Done taking pic ", piccount)
+    
+
+def test_stop_and_take_pic():
+    car = Car()
+    try:
+        print("Press Ctrl+C to stop the program...")
+        car.camera.start_stream()  # Start the camera
+        
+        # start with servos pointing down
+        car.servo.set_servo_pwm('0', servo0Center)
+        car.servo.set_servo_pwm('1', servo1Down)
+
+        car.motor.set_motor_model(0,0,0,0)  # Stop the caro
+
+        while True:
+            #get_qr_code(car)
+            take_pic(car)
+            time.sleep(1)
+
+    except KeyboardInterrupt:
+        print("\nEnd of program")
+        car.motor.set_motor_model(0,0,0,0)
+        car.camera.stop_stream()
+        car.camera.close()  # Close the camera
+
 def test_cam_nav():
     """Test camera navigation."""
     car = Car()
-    # initscr = curses.initscr()
-    # curses.curs_set(0)  # Hide the cursor
-    # initscr.clear()
-    # initscr.refresh()
+    
     try:
         print("Press Ctrl+C to stop the program...")
         car.camera.start_stream()  # Start the camera
         speed = 1000
         left_speed = speed
-        right_speed = speed - 100
+        right_speed = speed - 100 # the car seems to favour turning left
         
         turn_factor = 50  # Adjust this factor to control the turning sensitivity
+        
+        # optimal servo placement to look at the floor
+        servo0Center = 95
+        servo1Down = 60
        
         while True:
-            car.servo.set_servo_pwm('0', 95)
-            car.servo.set_servo_pwm('1', 60)
+            car.servo.set_servo_pwm('0', servo0Center)
+            car.servo.set_servo_pwm('1', servo1Down)
             left_speed = speed
             right_speed = speed - 100
 
@@ -291,7 +405,7 @@ def test_cam_nav():
             # readjust to 90 by turning left or right
 
             if angle > 135 or angle < 45:
-                print("Bad angle ", angle)
+                print("Bad angle, this means a bug in get_direction, angle: ", angle)
             
             elif angle < 90:
                 # Turn left
@@ -304,14 +418,18 @@ def test_cam_nav():
                 print("Turning right with angle:", angle)
                 delta = (angle - 90) * turn_factor
                 right_speed -= delta
+
             right_speed = int(right_speed)
             left_speed = int(left_speed)
             print("Setting left speed ",left_speed)
-            print("SEtting right speed", right_speed)
+            print("Setting right speed", right_speed)
+
+            # it's a four wheel drive, hence two left motors and two right motors
             car.motor.set_motor_model(left_speed, left_speed, right_speed, right_speed)
             #car.motor.set_motor_model(0,0,0,0)  # Stop the caro
             print("sleeping...")
             
+            # if it keeps overcorrecting, maybe sleep less
             time.sleep(0.5)
 
     except KeyboardInterrupt:
@@ -325,6 +443,7 @@ if __name__ == '__main__':
 
     print('Program is starting ... ')  # Print a message indicating the start of the program
     test_cam_nav()  # Test camera navigation
+    #test_get_qr_code()
     # car = Car()
     # initscr = curses.initscr()
     # curses.curs_set(0)  # Hide the cursor

@@ -13,7 +13,7 @@ import time
 NUM_PAGES = 4
 NUM_QUESTIONS = 17
 
-
+# deprecated (why do I even have this?) - consider deleting
 def find_contours(image: np.ndarray) -> List[np.ndarray]:
     """
     Find contours in the given image.
@@ -27,6 +27,8 @@ def find_contours(image: np.ndarray) -> List[np.ndarray]:
     contours, _ = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     return contours
 
+
+# deprecated (why do I even have this?) - consider deleting
 def draw_contours(image: np.ndarray, contours: List[np.ndarray]) -> np.ndarray:
     """
     Draw contours on the given image.
@@ -41,6 +43,8 @@ def draw_contours(image: np.ndarray, contours: List[np.ndarray]) -> np.ndarray:
     for contour in contours:
         cv2.drawContours(image, [contour], -1, (0, 255, 0), 3)
     return image
+
+
 
 def get_segments(countour):
     """
@@ -69,6 +73,8 @@ def get_segments(countour):
             raise ValueError("Each contour point must have shape (1, 2).")
         segments.append([countour[i-1][0], countour[i][0]])
     return segments
+
+
 
 def convert_angle(angle):
     """
@@ -130,12 +136,14 @@ def get_length_segment(p1, p2):
 def get_angle(countour):
     """
     Calculate the average angle of a contour, where each angle is weighted by the length of the segment.
+    It just prints out the angles - for testing purposes
 
     Args:
         countour (np.ndarray): The contour to calculate the angle for.
 
     Returns:
         float: The angle of the contour in degrees.
+        Doesn't return anything anymore
     """
     if len(countour) < 2:
         return 0.0
@@ -162,7 +170,16 @@ def get_angle(countour):
 
     #return get_angle_segment(p1, p2)
 
+
 def birdseye(img):
+    """
+    Bunch of magic numbers here. But given the camera angle that is currently 
+    being used (if the camera angle is changed, this will require adjustment), this transformation
+    takes the img and returns a birds eye view so that we can accurately measure 
+    the angles. Mostly for testing purposes, as now we take the contours
+    from the original image, then get the birds eye view of the countours instead.
+    Then we can find the angles of the contours. 
+    """
     pt1 = (120,0)
     pt2 = (400-pt1[0], pt1[1])
     pt3 = (400, 210)
@@ -185,6 +202,9 @@ def birdseye(img):
     return warped
 
 def warped_contours(contours):
+    """
+    This gives a birds eye of the contours. This and the function above should have the same name. 
+    """
     pt1 = (120,0)
     pt2 = (400-pt1[0], pt1[1])
     pt3 = (400, 210)
@@ -213,6 +233,10 @@ def warped_contours(contours):
     return warped_contours
 
 def main():
+
+    '''
+    A bunch of test code here.
+    '''
     # Read the image
     
     # pages = convert_from_path('mc-sheets/mybuble.pdf')
